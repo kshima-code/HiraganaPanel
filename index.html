@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no">
-  <title>かなコミュニケーションボード v6</title>
+  <title>かなコミュニケーションボード v7</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -68,6 +68,13 @@
       margin-bottom: 14px;
     }
 
+    .sticky-composer {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    }
+
     h1 {
       font-size: 24px;
       margin: 0 0 8px;
@@ -103,12 +110,15 @@
 
     #output {
       width: 100%;
-      min-height: 132px;
+      min-height: 104px;
+      max-height: 190px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       border: 3px solid var(--border);
       border-radius: 16px;
       padding: 14px;
-      font-size: 34px;
-      line-height: 1.5;
+      font-size: 32px;
+      line-height: 1.45;
       background: var(--button-bg);
       color: var(--button-text);
       white-space: pre-wrap;
@@ -297,8 +307,9 @@
     }
 
     body.big #output {
-      min-height: 160px;
-      font-size: 42px;
+      min-height: 128px;
+      max-height: 230px;
+      font-size: 40px;
     }
 
     body.big .phrase {
@@ -404,16 +415,18 @@
         border-radius: 13px;
       }
       #output {
-        min-height: 112px;
-        font-size: 28px;
+        min-height: 86px;
+        max-height: 140px;
+        font-size: 27px;
       }
       body.big .kana {
         min-height: 82px;
         font-size: 34px;
       }
       body.big #output {
-        min-height: 138px;
-        font-size: 35px;
+        min-height: 108px;
+        max-height: 170px;
+        font-size: 34px;
       }
     }
   </style>
@@ -424,14 +437,14 @@
     <section class="card">
       <h1>かなコミュニケーションボード</h1>
       <div class="desc">
-        スクロール時の誤入力を防ぐため、押し始めから指が一定距離以上動いた場合は入力しないようにしました。よく使う言葉は画面上で追加・削除できます。
+        文章表示エリアを画面上部に固定しました。スクロールしても、作成中の文章と主要操作が常に見えるようになっています。
       </div>
       <div id="status" class="status">
         動作状態：JavaScript未確認です。
       </div>
     </section>
 
-    <section class="card">
+    <section class="card sticky-composer">
       <h2>文章</h2>
       <div id="output" class="empty" aria-live="polite"></div>
       <textarea id="copyText" aria-hidden="true" tabindex="-1"></textarea>
@@ -672,6 +685,7 @@
         if (copyText) {
           copyText.value = state.text;
         }
+        output.scrollTop = output.scrollHeight;
         saveText();
       }
 
@@ -1088,7 +1102,7 @@
       }
 
       function init() {
-        setStatus("動作状態：準備完了です。タップできます。スクロール時は入力しません。", true);
+        setStatus("動作状態：準備完了です。文章欄はスクロールしても上部に残ります。", true);
         loadText();
         loadPhrases();
         loadDisplay();
@@ -1123,4 +1137,3 @@
   </script>
 </body>
 </html>
-
