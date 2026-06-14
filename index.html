@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no">
-  <title>かなコミュニケーションボード v7</title>
+  <title>かなコミュニケーションボード v9</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -68,11 +68,23 @@
       margin-bottom: 14px;
     }
 
-    .sticky-composer {
-      position: sticky;
+    .fixed-output {
+      position: fixed;
+      left: 50%;
       top: 0;
-      z-index: 100;
+      transform: translateX(-50%);
+      width: min(1160px, 100%);
+      z-index: 1000;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-top: 0;
+      border-radius: 0 0 16px 16px;
+      padding: max(8px, env(safe-area-inset-top)) 10px 8px;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    }
+
+    .fixed-spacer {
+      height: 108px;
     }
 
     h1 {
@@ -110,15 +122,15 @@
 
     #output {
       width: 100%;
-      min-height: 104px;
-      max-height: 190px;
+      min-height: 72px;
+      max-height: 132px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       border: 3px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      font-size: 32px;
-      line-height: 1.45;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 30px;
+      line-height: 1.35;
       background: var(--button-bg);
       color: var(--button-text);
       white-space: pre-wrap;
@@ -307,9 +319,13 @@
     }
 
     body.big #output {
-      min-height: 128px;
-      max-height: 230px;
-      font-size: 40px;
+      min-height: 92px;
+      max-height: 170px;
+      font-size: 38px;
+    }
+
+    body.big .fixed-spacer {
+      height: 128px;
     }
 
     body.big .phrase {
@@ -342,6 +358,10 @@
       --error-bg: #450a0a;
       --error-text: #fee2e2;
       --shadow: none;
+    }
+
+    body.high .fixed-output {
+      box-shadow: 0 0 0 3px #ffffff;
     }
 
     body.high .primary {
@@ -415,18 +435,22 @@
         border-radius: 13px;
       }
       #output {
-        min-height: 86px;
-        max-height: 140px;
-        font-size: 27px;
+        min-height: 62px;
+        max-height: 108px;
+        font-size: 25px;
       }
       body.big .kana {
         min-height: 82px;
         font-size: 34px;
       }
       body.big #output {
-        min-height: 108px;
-        max-height: 170px;
-        font-size: 34px;
+        min-height: 78px;
+        max-height: 132px;
+        font-size: 32px;
+      }
+
+      body.big .fixed-spacer {
+        height: 112px;
       }
     }
   </style>
@@ -437,16 +461,20 @@
     <section class="card">
       <h1>かなコミュニケーションボード</h1>
       <div class="desc">
-        文章表示エリアを画面上部に固定しました。スクロールしても、作成中の文章と主要操作が常に見えるようになっています。
+        文章表示欄をページ全体の固定ヘッダーにしました。下までスクロールしても文章欄が消えないようにしています。
       </div>
       <div id="status" class="status">
         動作状態：JavaScript未確認です。
       </div>
     </section>
 
-    <section class="card sticky-composer">
-      <h2>文章</h2>
+    <div class="fixed-output">
       <div id="output" class="empty" aria-live="polite"></div>
+    </div>
+    <div class="fixed-spacer" aria-hidden="true"></div>
+
+    <section class="card">
+      <h2>操作</h2>
       <textarea id="copyText" aria-hidden="true" tabindex="-1"></textarea>
 
       <div class="actions">
@@ -674,6 +702,14 @@
         }
       }
 
+
+      function adjustFixedSpacer() {
+        var fixed = document.querySelector(".fixed-output");
+        var spacer = document.querySelector(".fixed-spacer");
+        if (!fixed || !spacer) return;
+        spacer.style.height = Math.ceil(fixed.offsetHeight + 10) + "px";
+      }
+
       function render() {
         var output = byId("output");
         var copyText = byId("copyText");
@@ -686,6 +722,7 @@
           copyText.value = state.text;
         }
         output.scrollTop = output.scrollHeight;
+        adjustFixedSpacer();
         saveText();
       }
 
@@ -862,12 +899,14 @@
       function toggleBig() {
         document.body.classList.toggle("big");
         updateDisplayButtons();
+        adjustFixedSpacer();
         saveDisplay();
       }
 
       function toggleContrast() {
         document.body.classList.toggle("high");
         updateDisplayButtons();
+        adjustFixedSpacer();
         saveDisplay();
       }
 
@@ -1102,7 +1141,7 @@
       }
 
       function init() {
-        setStatus("動作状態：準備完了です。文章欄はスクロールしても上部に残ります。", true);
+        setStatus("動作状態：準備完了です。下までスクロールしても文章欄は上部に残ります。", true);
         loadText();
         loadPhrases();
         loadDisplay();
@@ -1120,6 +1159,11 @@
             }
           });
         }
+
+        window.addEventListener("resize", adjustFixedSpacer);
+        window.addEventListener("orientationchange", function () {
+          setTimeout(adjustFixedSpacer, 300);
+        });
 
         if ("speechSynthesis" in window) {
           speechSynthesis.onvoiceschanged = loadVoices;
