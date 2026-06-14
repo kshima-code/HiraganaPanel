@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <title>かなコミュニケーションボード v6</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #4b5563;
+      --border: #cbd5e1;
+      --button-bg: #ffffff;
+      --button-text: #111827;
+      --button-border: #94a3b8;
+      --primary-bg: #2563eb;
+      --primary-text: #ffffff;
+      --danger-bg: #dc2626;
+      --danger-text: #ffffff;
+      --warning-bg: #fef3c7;
+      --warning-text: #111827;
+      --ok-bg: #dcfce7;
+      --ok-text: #14532d;
+      --error-bg: #fee2e2;
+      --error-text: #7f1d1d;
+      --shadow: 0 8px 20px rgba(0,0,0,0.08);
+      --radius: 18px;
+      --kana-height: 78px;
+      --kana-font: 32px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: max(10px, env(safe-area-inset-top)) 10px max(18px, env(safe-area-inset-bottom));
+    }
+
+    .card {
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 12px;
+      line-height: 1.3;
+    }
+
+    .desc {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--error-bg);
+      color: var(--error-text);
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .status.ready {
+      background: var(--ok-bg);
+      color: var(--ok-text);
+    }
+
+    #output {
+      width: 100%;
+      min-height: 132px;
+      border: 3px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 34px;
+      line-height: 1.5;
+      background: var(--button-bg);
+      color: var(--button-text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    #output.empty::before {
+      content: "ここに文章が入ります";
+      color: var(--muted);
+    }
+
+    #copyText {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    button {
+      min-height: 60px;
+      border: 3px solid var(--button-border);
+      border-radius: 16px;
+      background: var(--button-bg);
+      color: var(--button-text);
+      font-size: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      appearance: none;
+      -webkit-appearance: none;
+      line-height: 1.2;
+      padding: 8px;
+      touch-action: manipulation;
+    }
+
+    button:active, button.active-tap {
+      transform: scale(0.97);
+      filter: brightness(0.94);
+    }
+
+    .primary {
+      background: var(--primary-bg);
+      color: var(--primary-text);
+      border-color: var(--primary-bg);
+    }
+
+    .danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: var(--danger-bg);
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border-color: #f59e0b;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .setting {
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .setting label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="range"], input[type="text"] {
+      width: 100%;
+      min-height: 44px;
+      color: var(--button-text);
+      background: var(--button-bg);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 18px;
+      padding: 8px 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .kana {
+      min-height: var(--kana-height);
+      font-size: var(--kana-font);
+    }
+
+    .phrase {
+      min-height: 70px;
+      font-size: 19px;
+      text-align: left;
+      padding: 10px 12px;
+    }
+
+    .phrase-row {
+      display: grid;
+      grid-template-columns: 1fr 72px;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .phrase-row .phrase {
+      margin: 0;
+    }
+
+    .delete-phrase {
+      min-height: 70px;
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: var(--danger-bg);
+      font-size: 18px;
+      padding: 4px;
+    }
+
+    .phrase-form {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: 10px;
+      margin-bottom: 14px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    .small-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      background: #111827;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      font-weight: 800;
+      z-index: 9999;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    body.big {
+      --kana-height: 100px;
+      --kana-font: 42px;
+    }
+
+    body.big #output {
+      min-height: 160px;
+      font-size: 42px;
+    }
+
+    body.big .phrase {
+      min-height: 90px;
+      font-size: 25px;
+    }
+
+    body.big .delete-phrase {
+      min-height: 90px;
+      font-size: 22px;
+    }
+
+    body.high {
+      --bg: #000000;
+      --card: #000000;
+      --text: #ffffff;
+      --muted: #f3f4f6;
+      --border: #ffffff;
+      --button-bg: #000000;
+      --button-text: #ffffff;
+      --button-border: #ffffff;
+      --primary-bg: #facc15;
+      --primary-text: #000000;
+      --danger-bg: #ef4444;
+      --danger-text: #ffffff;
+      --warning-bg: #facc15;
+      --warning-text: #000000;
+      --ok-bg: #052e16;
+      --ok-text: #dcfce7;
+      --error-bg: #450a0a;
+      --error-text: #fee2e2;
+      --shadow: none;
+    }
+
+    body.high .primary {
+      background: #facc15;
+      color: #000000;
+      border-color: #facc15;
+    }
+
+    body.high .warning {
+      background: #facc15;
+      color: #000000;
+      border-color: #facc15;
+    }
+
+    body.high .danger, body.high .delete-phrase {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    @media (max-width: 760px) {
+      .actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .settings {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .phrase-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .wrap {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .card {
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      h1 {
+        font-size: 21px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      .grid {
+        gap: 7px;
+      }
+      .kana {
+        min-height: 64px;
+        font-size: 27px;
+        border-radius: 13px;
+      }
+      .phrase {
+        min-height: 60px;
+        font-size: 17px;
+      }
+      .phrase-row {
+        grid-template-columns: 1fr 60px;
+        gap: 6px;
+      }
+      .delete-phrase {
+        min-height: 60px;
+        font-size: 15px;
+      }
+      button {
+        min-height: 56px;
+        font-size: 18px;
+        border-radius: 13px;
+      }
+      #output {
+        min-height: 112px;
+        font-size: 28px;
+      }
+      body.big .kana {
+        min-height: 82px;
+        font-size: 34px;
+      }
+      body.big #output {
+        min-height: 138px;
+        font-size: 35px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h1>かなコミュニケーションボード</h1>
+      <div class="desc">
+        スクロール時の誤入力を防ぐため、押し始めから指が一定距離以上動いた場合は入力しないようにしました。よく使う言葉は画面上で追加・削除できます。
+      </div>
+      <div id="status" class="status">
+        動作状態：JavaScript未確認です。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>文章</h2>
+      <div id="output" class="empty" aria-live="polite"></div>
+      <textarea id="copyText" aria-hidden="true" tabindex="-1"></textarea>
+
+      <div class="actions">
+        <button type="button" class="primary action-button" data-action="speak">🔊 読み上げ</button>
+        <button type="button" class="action-button" data-action="space">空白</button>
+        <button type="button" class="warning action-button" data-action="delete">1文字消す</button>
+        <button type="button" class="danger action-button" data-action="clear">全部消す</button>
+        <button type="button" class="action-button" data-action="copy">コピー</button>
+      </div>
+
+      <div class="settings">
+        <div class="setting">
+          <label for="voice">声</label>
+          <select id="voice"><option value="">標準</option></select>
+        </div>
+        <div class="setting">
+          <label for="rate">速さ</label>
+          <input id="rate" type="range" min="0.5" max="1.4" step="0.1" value="0.9">
+        </div>
+        <div class="setting">
+          <label>表示</label>
+          <button type="button" class="action-button" data-action="big">大きく</button>
+        </div>
+        <div class="setting">
+          <label>配色</label>
+          <button type="button" class="action-button" data-action="contrast">高コントラスト</button>
+        </div>
+      </div>
+
+      <div class="small-note">
+        スクロール中はボタンに触れても入力されません。入力したい場合は、ボタン上でほぼ動かさずにタップしてください。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>50音</h2>
+      <div class="grid" aria-label="50音パネル">
+        <button type="button" class="kana input-button" data-value="あ">あ</button>
+        <button type="button" class="kana input-button" data-value="い">い</button>
+        <button type="button" class="kana input-button" data-value="う">う</button>
+        <button type="button" class="kana input-button" data-value="え">え</button>
+        <button type="button" class="kana input-button" data-value="お">お</button>
+        <button type="button" class="kana input-button" data-value="か">か</button>
+        <button type="button" class="kana input-button" data-value="き">き</button>
+        <button type="button" class="kana input-button" data-value="く">く</button>
+        <button type="button" class="kana input-button" data-value="け">け</button>
+        <button type="button" class="kana input-button" data-value="こ">こ</button>
+        <button type="button" class="kana input-button" data-value="さ">さ</button>
+        <button type="button" class="kana input-button" data-value="し">し</button>
+        <button type="button" class="kana input-button" data-value="す">す</button>
+        <button type="button" class="kana input-button" data-value="せ">せ</button>
+        <button type="button" class="kana input-button" data-value="そ">そ</button>
+        <button type="button" class="kana input-button" data-value="た">た</button>
+        <button type="button" class="kana input-button" data-value="ち">ち</button>
+        <button type="button" class="kana input-button" data-value="つ">つ</button>
+        <button type="button" class="kana input-button" data-value="て">て</button>
+        <button type="button" class="kana input-button" data-value="と">と</button>
+        <button type="button" class="kana input-button" data-value="な">な</button>
+        <button type="button" class="kana input-button" data-value="に">に</button>
+        <button type="button" class="kana input-button" data-value="ぬ">ぬ</button>
+        <button type="button" class="kana input-button" data-value="ね">ね</button>
+        <button type="button" class="kana input-button" data-value="の">の</button>
+        <button type="button" class="kana input-button" data-value="は">は</button>
+        <button type="button" class="kana input-button" data-value="ひ">ひ</button>
+        <button type="button" class="kana input-button" data-value="ふ">ふ</button>
+        <button type="button" class="kana input-button" data-value="へ">へ</button>
+        <button type="button" class="kana input-button" data-value="ほ">ほ</button>
+        <button type="button" class="kana input-button" data-value="ま">ま</button>
+        <button type="button" class="kana input-button" data-value="み">み</button>
+        <button type="button" class="kana input-button" data-value="む">む</button>
+        <button type="button" class="kana input-button" data-value="め">め</button>
+        <button type="button" class="kana input-button" data-value="も">も</button>
+        <button type="button" class="kana input-button" data-value="や">や</button>
+        <button type="button" class="kana input-button" data-value="ゆ">ゆ</button>
+        <button type="button" class="kana input-button" data-value="よ">よ</button>
+        <button type="button" class="kana input-button" data-value="ら">ら</button>
+        <button type="button" class="kana input-button" data-value="り">り</button>
+        <button type="button" class="kana input-button" data-value="る">る</button>
+        <button type="button" class="kana input-button" data-value="れ">れ</button>
+        <button type="button" class="kana input-button" data-value="ろ">ろ</button>
+        <button type="button" class="kana input-button" data-value="わ">わ</button>
+        <button type="button" class="kana input-button" data-value="を">を</button>
+        <button type="button" class="kana input-button" data-value="ん">ん</button>
+        <button type="button" class="kana input-button" data-value="ー">ー</button>
+        <button type="button" class="kana input-button" data-value="、">、</button>
+        <button type="button" class="kana input-button" data-value="。">。</button>
+        <button type="button" class="kana input-button" data-value="？">？</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>濁音・半濁音・小さい文字</h2>
+      <div class="grid" aria-label="濁音・半濁音・小さい文字パネル">
+        <button type="button" class="kana input-button" data-value="が">が</button>
+        <button type="button" class="kana input-button" data-value="ぎ">ぎ</button>
+        <button type="button" class="kana input-button" data-value="ぐ">ぐ</button>
+        <button type="button" class="kana input-button" data-value="げ">げ</button>
+        <button type="button" class="kana input-button" data-value="ご">ご</button>
+        <button type="button" class="kana input-button" data-value="ざ">ざ</button>
+        <button type="button" class="kana input-button" data-value="じ">じ</button>
+        <button type="button" class="kana input-button" data-value="ず">ず</button>
+        <button type="button" class="kana input-button" data-value="ぜ">ぜ</button>
+        <button type="button" class="kana input-button" data-value="ぞ">ぞ</button>
+        <button type="button" class="kana input-button" data-value="だ">だ</button>
+        <button type="button" class="kana input-button" data-value="ぢ">ぢ</button>
+        <button type="button" class="kana input-button" data-value="づ">づ</button>
+        <button type="button" class="kana input-button" data-value="で">で</button>
+        <button type="button" class="kana input-button" data-value="ど">ど</button>
+        <button type="button" class="kana input-button" data-value="ば">ば</button>
+        <button type="button" class="kana input-button" data-value="び">び</button>
+        <button type="button" class="kana input-button" data-value="ぶ">ぶ</button>
+        <button type="button" class="kana input-button" data-value="べ">べ</button>
+        <button type="button" class="kana input-button" data-value="ぼ">ぼ</button>
+        <button type="button" class="kana input-button" data-value="ぱ">ぱ</button>
+        <button type="button" class="kana input-button" data-value="ぴ">ぴ</button>
+        <button type="button" class="kana input-button" data-value="ぷ">ぷ</button>
+        <button type="button" class="kana input-button" data-value="ぺ">ぺ</button>
+        <button type="button" class="kana input-button" data-value="ぽ">ぽ</button>
+        <button type="button" class="kana input-button" data-value="ゃ">ゃ</button>
+        <button type="button" class="kana input-button" data-value="ゅ">ゅ</button>
+        <button type="button" class="kana input-button" data-value="ょ">ょ</button>
+        <button type="button" class="kana input-button" data-value="っ">っ</button>
+        <button type="button" class="kana input-button" data-value="！">！</button>
+        <button type="button" class="kana input-button" data-value="ぁ">ぁ</button>
+        <button type="button" class="kana input-button" data-value="ぃ">ぃ</button>
+        <button type="button" class="kana input-button" data-value="ぅ">ぅ</button>
+        <button type="button" class="kana input-button" data-value="ぇ">ぇ</button>
+        <button type="button" class="kana input-button" data-value="ぉ">ぉ</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>よく使うことば</h2>
+      <div class="phrase-form">
+        <input id="newPhrase" type="text" placeholder="追加したい言葉を入力" autocomplete="off">
+        <button type="button" class="primary action-button" data-action="addPhrase">追加</button>
+      </div>
+      <div id="phraseList" aria-label="よく使うことば一覧"></div>
+      <div class="small-note">
+        追加した言葉はこの端末のブラウザに保存されます。各言葉の右にある「削除」で消せます。
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var defaultPhrases = ['はい', 'いいえ', 'ありがとう', '水が飲みたいです', 'お茶が飲みたいです', 'トイレに行きたいです', '痛いです', '大丈夫です', '待ってください', 'もう一度お願いします', '暑いです', '寒いです', '眠いです', '家族を呼んでください', '助けてください', '右です', '左です', '上です', '下です', '違います'];
+
+      var state = {
+        text: "",
+        phrases: [],
+        pointer: {
+          active: false,
+          id: null,
+          startX: 0,
+          startY: 0,
+          moved: false,
+          target: null,
+          key: "",
+          startTime: 0
+        },
+        lastHandledAt: 0,
+        lastHandledKey: ""
+      };
+
+      var MOVE_LIMIT = 14;
+      var TAP_TIME_LIMIT = 1200;
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function setStatus(message, ready) {
+        var el = byId("status");
+        if (!el) return;
+        el.textContent = message;
+        el.className = ready ? "status ready" : "status";
+      }
+
+      function toast(message) {
+        var el = byId("toast");
+        if (!el) return;
+        el.textContent = message;
+        el.className = "toast show";
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(function () {
+          el.className = "toast";
+        }, 1400);
+      }
+
+      function saveText() {
+        try {
+          localStorage.setItem("kanaBoardV6Text", state.text);
+        } catch (e) {}
+      }
+
+      function loadText() {
+        try {
+          state.text = localStorage.getItem("kanaBoardV6Text") || "";
+        } catch (e) {
+          state.text = "";
+        }
+      }
+
+      function savePhrases() {
+        try {
+          localStorage.setItem("kanaBoardV6Phrases", JSON.stringify(state.phrases));
+        } catch (e) {}
+      }
+
+      function loadPhrases() {
+        try {
+          var saved = localStorage.getItem("kanaBoardV6Phrases");
+          if (saved) {
+            state.phrases = JSON.parse(saved);
+          } else {
+            state.phrases = defaultPhrases.slice();
+          }
+        } catch (e) {
+          state.phrases = defaultPhrases.slice();
+        }
+      }
+
+      function render() {
+        var output = byId("output");
+        var copyText = byId("copyText");
+        if (!output) return;
+
+        output.textContent = state.text;
+        output.className = state.text ? "" : "empty";
+
+        if (copyText) {
+          copyText.value = state.text;
+        }
+        saveText();
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function renderPhrases() {
+        var list = byId("phraseList");
+        if (!list) return;
+        list.innerHTML = "";
+
+        state.phrases.forEach(function (phrase, index) {
+          var row = document.createElement("div");
+          row.className = "phrase-row";
+
+          var phraseButton = document.createElement("button");
+          phraseButton.type = "button";
+          phraseButton.className = "phrase input-button";
+          phraseButton.setAttribute("data-value", phrase);
+          phraseButton.textContent = phrase;
+
+          var deleteButton = document.createElement("button");
+          deleteButton.type = "button";
+          deleteButton.className = "delete-phrase action-button";
+          deleteButton.setAttribute("data-action", "deletePhrase");
+          deleteButton.setAttribute("data-index", String(index));
+          deleteButton.textContent = "削除";
+
+          row.appendChild(phraseButton);
+          row.appendChild(deleteButton);
+          list.appendChild(row);
+        });
+      }
+
+      function flash(el) {
+        if (!el || !el.classList) return;
+        el.classList.add("active-tap");
+        setTimeout(function () {
+          el.classList.remove("active-tap");
+        }, 120);
+      }
+
+      function append(value) {
+        state.text += value;
+        render();
+      }
+
+      function removeOne() {
+        if (!state.text) return;
+        var chars = Array.from(state.text);
+        chars.pop();
+        state.text = chars.join("");
+        render();
+      }
+
+      function clearAll() {
+        state.text = "";
+        render();
+        toast("消しました");
+      }
+
+      function addSpace() {
+        state.text += " ";
+        render();
+      }
+
+      function addPhrase() {
+        var input = byId("newPhrase");
+        if (!input) return;
+
+        var value = input.value.trim();
+        if (!value) {
+          toast("追加する言葉を入力してください");
+          return;
+        }
+
+        if (state.phrases.indexOf(value) >= 0) {
+          toast("すでに登録されています");
+          return;
+        }
+
+        state.phrases.push(value);
+        input.value = "";
+        savePhrases();
+        renderPhrases();
+        toast("追加しました");
+      }
+
+      function deletePhrase(index) {
+        if (index < 0 || index >= state.phrases.length) return;
+        state.phrases.splice(index, 1);
+        savePhrases();
+        renderPhrases();
+        toast("削除しました");
+      }
+
+      function copyText() {
+        if (!state.text) {
+          toast("文章がありません");
+          return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(state.text).then(function () {
+            toast("コピーしました");
+          }).catch(fallbackCopy);
+        } else {
+          fallbackCopy();
+        }
+      }
+
+      function fallbackCopy() {
+        var area = byId("copyText");
+        if (!area) return;
+        area.style.left = "0";
+        area.style.top = "0";
+        area.style.opacity = "1";
+        area.focus();
+        area.select();
+        try {
+          document.execCommand("copy");
+          toast("コピーしました");
+        } catch (e) {
+          toast("コピーできませんでした");
+        }
+        area.style.left = "-9999px";
+        area.style.top = "-9999px";
+        area.style.opacity = "0";
+      }
+
+      function speak() {
+        var text = state.text.trim();
+        if (!text) {
+          toast("文章がありません");
+          return;
+        }
+
+        if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+          alert("このブラウザは読み上げに対応していません。Safari、Chrome、Edgeなどでお試しください。");
+          return;
+        }
+
+        try {
+          speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(text);
+          var rate = byId("rate");
+          var voiceSelect = byId("voice");
+          u.lang = "ja-JP";
+          u.rate = rate ? Number(rate.value || 0.9) : 0.9;
+          u.pitch = 1.0;
+
+          var selectedName = voiceSelect ? voiceSelect.value : "";
+          if (selectedName) {
+            var voices = speechSynthesis.getVoices() || [];
+            for (var i = 0; i < voices.length; i++) {
+              if (voices[i].name === selectedName) {
+                u.voice = voices[i];
+                break;
+              }
+            }
+          }
+          speechSynthesis.speak(u);
+        } catch (e) {
+          alert("読み上げに失敗しました。端末の音量、マナーモード、ブラウザ設定を確認してください。");
+        }
+      }
+
+      function toggleBig() {
+        document.body.classList.toggle("big");
+        updateDisplayButtons();
+        saveDisplay();
+      }
+
+      function toggleContrast() {
+        document.body.classList.toggle("high");
+        updateDisplayButtons();
+        saveDisplay();
+      }
+
+      function updateDisplayButtons() {
+        var buttons = document.querySelectorAll("[data-action]");
+        buttons.forEach(function (btn) {
+          var action = btn.getAttribute("data-action");
+          if (action === "big") {
+            btn.textContent = document.body.classList.contains("big") ? "標準" : "大きく";
+          }
+          if (action === "contrast") {
+            btn.textContent = document.body.classList.contains("high") ? "標準色" : "高コントラスト";
+          }
+        });
+      }
+
+      function saveDisplay() {
+        try {
+          localStorage.setItem("kanaBoardV6Big", document.body.classList.contains("big") ? "1" : "0");
+          localStorage.setItem("kanaBoardV6High", document.body.classList.contains("high") ? "1" : "0");
+        } catch (e) {}
+      }
+
+      function loadDisplay() {
+        try {
+          if (localStorage.getItem("kanaBoardV6Big") === "1") {
+            document.body.classList.add("big");
+          }
+          if (localStorage.getItem("kanaBoardV6High") === "1") {
+            document.body.classList.add("high");
+          }
+        } catch (e) {}
+        updateDisplayButtons();
+      }
+
+      function runAction(action, button) {
+        if (action === "space") addSpace();
+        else if (action === "delete") removeOne();
+        else if (action === "clear") clearAll();
+        else if (action === "copy") copyText();
+        else if (action === "speak") speak();
+        else if (action === "big") toggleBig();
+        else if (action === "contrast") toggleContrast();
+        else if (action === "addPhrase") addPhrase();
+        else if (action === "deletePhrase") {
+          var index = Number(button.getAttribute("data-index"));
+          deletePhrase(index);
+        }
+      }
+
+      function findButton(target) {
+        while (target && target !== document) {
+          if (target.tagName === "BUTTON") return target;
+          target = target.parentNode;
+        }
+        return null;
+      }
+
+      function eventPoint(ev) {
+        if (ev.changedTouches && ev.changedTouches.length > 0) {
+          return {
+            x: ev.changedTouches[0].clientX,
+            y: ev.changedTouches[0].clientY
+          };
+        }
+        if (ev.touches && ev.touches.length > 0) {
+          return {
+            x: ev.touches[0].clientX,
+            y: ev.touches[0].clientY
+          };
+        }
+        return {
+          x: ev.clientX || 0,
+          y: ev.clientY || 0
+        };
+      }
+
+      function activationKey(button) {
+        return button.getAttribute("data-value") || button.getAttribute("data-action") || button.textContent || "";
+      }
+
+      function handleStart(ev) {
+        var button = findButton(ev.target);
+        if (!button) return;
+
+        var p = eventPoint(ev);
+        state.pointer.active = true;
+        state.pointer.id = ev.pointerId || "touch";
+        state.pointer.startX = p.x;
+        state.pointer.startY = p.y;
+        state.pointer.moved = false;
+        state.pointer.target = button;
+        state.pointer.key = activationKey(button);
+        state.pointer.startTime = Date.now();
+      }
+
+      function handleMove(ev) {
+        if (!state.pointer.active) return;
+
+        var p = eventPoint(ev);
+        var dx = Math.abs(p.x - state.pointer.startX);
+        var dy = Math.abs(p.y - state.pointer.startY);
+
+        if (dx > MOVE_LIMIT || dy > MOVE_LIMIT) {
+          state.pointer.moved = true;
+          if (state.pointer.target) {
+            state.pointer.target.classList.remove("active-tap");
+          }
+        }
+      }
+
+      function handleEnd(ev) {
+        var button = findButton(ev.target);
+        var tracked = state.pointer.target;
+
+        if (!button && tracked) {
+          button = tracked;
+        }
+
+        if (!button) return;
+
+        var now = Date.now();
+        var key = activationKey(button);
+
+        // touch/pointer後にclickが来る場合の二重入力防止
+        if (ev.type === "click" && now - state.lastHandledAt < 650 && key === state.lastHandledKey) {
+          if (ev.cancelable) ev.preventDefault();
+          return;
+        }
+
+        // スクロール、長押し、開始ボタンと終了ボタンが違う場合は入力しない
+        var elapsed = now - state.pointer.startTime;
+        var isTouchLike = ev.type === "touchend" || ev.type === "pointerup";
+        if (isTouchLike) {
+          if (state.pointer.moved || elapsed > TAP_TIME_LIMIT || tracked !== button) {
+            state.pointer.active = false;
+            if (ev.cancelable) ev.preventDefault();
+            return;
+          }
+        }
+
+        state.lastHandledAt = now;
+        state.lastHandledKey = key;
+
+        if (ev.cancelable && isTouchLike) ev.preventDefault();
+        flash(button);
+
+        var value = button.getAttribute("data-value");
+        var action = button.getAttribute("data-action");
+
+        if (value !== null) append(value);
+        else if (action) runAction(action, button);
+
+        state.pointer.active = false;
+      }
+
+      function handleCancel() {
+        state.pointer.active = false;
+        state.pointer.moved = true;
+        if (state.pointer.target) {
+          state.pointer.target.classList.remove("active-tap");
+        }
+      }
+
+      function handleClick(ev) {
+        var button = findButton(ev.target);
+        if (!button) return;
+
+        var now = Date.now();
+        var key = activationKey(button);
+
+        // touch/pointerで処理済みならclickは無視
+        if (now - state.lastHandledAt < 650 && key === state.lastHandledKey) {
+          if (ev.cancelable) ev.preventDefault();
+          return;
+        }
+
+        state.lastHandledAt = now;
+        state.lastHandledKey = key;
+        flash(button);
+
+        var value = button.getAttribute("data-value");
+        var action = button.getAttribute("data-action");
+
+        if (value !== null) append(value);
+        else if (action) runAction(action, button);
+      }
+
+      function attachEvents() {
+        if (window.PointerEvent) {
+          document.addEventListener("pointerdown", handleStart, false);
+          document.addEventListener("pointermove", handleMove, false);
+          document.addEventListener("pointerup", handleEnd, false);
+          document.addEventListener("pointercancel", handleCancel, false);
+        } else {
+          document.addEventListener("touchstart", handleStart, false);
+          document.addEventListener("touchmove", handleMove, false);
+          document.addEventListener("touchend", handleEnd, false);
+          document.addEventListener("touchcancel", handleCancel, false);
+        }
+
+        document.addEventListener("click", handleClick, false);
+
+        document.addEventListener("contextmenu", function (ev) {
+          var button = findButton(ev.target);
+          if (button) ev.preventDefault();
+        }, false);
+      }
+
+      function loadVoices() {
+        if (!("speechSynthesis" in window)) return;
+        var select = byId("voice");
+        if (!select) return;
+        var voices = speechSynthesis.getVoices() || [];
+        var list = [];
+        for (var i = 0; i < voices.length; i++) {
+          if ((voices[i].lang || "").toLowerCase().indexOf("ja") === 0) {
+            list.push(voices[i]);
+          }
+        }
+        if (list.length === 0) list = voices;
+
+        var current = select.value;
+        select.innerHTML = '<option value="">標準</option>';
+        for (var j = 0; j < list.length; j++) {
+          var option = document.createElement("option");
+          option.value = list[j].name;
+          option.textContent = list[j].name + " (" + list[j].lang + ")";
+          select.appendChild(option);
+        }
+        select.value = current;
+      }
+
+      function init() {
+        setStatus("動作状態：準備完了です。タップできます。スクロール時は入力しません。", true);
+        loadText();
+        loadPhrases();
+        loadDisplay();
+        render();
+        renderPhrases();
+        attachEvents();
+        loadVoices();
+
+        var newPhrase = byId("newPhrase");
+        if (newPhrase) {
+          newPhrase.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter") {
+              ev.preventDefault();
+              addPhrase();
+            }
+          });
+        }
+
+        if ("speechSynthesis" in window) {
+          speechSynthesis.onvoiceschanged = loadVoices;
+          setTimeout(loadVoices, 300);
+          setTimeout(loadVoices, 1200);
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init, false);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
