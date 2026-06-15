@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no">
-  <title>かなコミュニケーションボード v9</title>
+  <title>かなコミュニケーションボード</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -255,13 +255,22 @@
 
     .phrase-row {
       display: grid;
-      grid-template-columns: 1fr 72px;
+      grid-template-columns: 1fr 60px 60px 72px;
       gap: 8px;
       margin-bottom: 8px;
     }
 
     .phrase-row .phrase {
       margin: 0;
+    }
+
+    .move-phrase {
+      min-height: 70px;
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border-color: #f59e0b;
+      font-size: 18px;
+      padding: 4px;
     }
 
     .delete-phrase {
@@ -277,11 +286,28 @@
       display: grid;
       grid-template-columns: 1fr 140px;
       gap: 10px;
+      margin-bottom: 10px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    .phrase-tools {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
       margin-bottom: 14px;
       border: 2px solid var(--border);
       border-radius: 14px;
       padding: 10px;
       background: var(--bg);
+    }
+
+    .reset-phrases {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border-color: #f59e0b;
     }
 
     .small-note {
@@ -333,6 +359,7 @@
       font-size: 25px;
     }
 
+    body.big .move-phrase,
     body.big .delete-phrase {
       min-height: 90px;
       font-size: 22px;
@@ -371,6 +398,13 @@
     }
 
     body.high .warning {
+      background: #facc15;
+      color: #000000;
+      border-color: #facc15;
+    }
+
+    body.high .move-phrase,
+    body.high .reset-phrases {
       background: #facc15;
       color: #000000;
       border-color: #facc15;
@@ -422,12 +456,13 @@
         font-size: 17px;
       }
       .phrase-row {
-        grid-template-columns: 1fr 60px;
+        grid-template-columns: 1fr 48px 48px 58px;
         gap: 6px;
       }
+      .move-phrase,
       .delete-phrase {
         min-height: 60px;
-        font-size: 15px;
+        font-size: 14px;
       }
       button {
         min-height: 56px;
@@ -461,7 +496,7 @@
     <section class="card">
       <h1>かなコミュニケーションボード</h1>
       <div class="desc">
-        文章表示欄をページ全体の固定ヘッダーにしました。下までスクロールしても文章欄が消えないようにしています。
+        文章表示欄を固定し、よく使う言葉の追加・削除・並び替え・デフォルト復元ができます。
       </div>
       <div id="status" class="status">
         動作状態：JavaScript未確認です。
@@ -612,9 +647,12 @@
         <input id="newPhrase" type="text" placeholder="追加したい言葉を入力" autocomplete="off">
         <button type="button" class="primary action-button" data-action="addPhrase">追加</button>
       </div>
+      <div class="phrase-tools">
+        <button type="button" class="reset-phrases action-button" data-action="resetPhrases">デフォルト設定に戻す</button>
+      </div>
       <div id="phraseList" aria-label="よく使うことば一覧"></div>
       <div class="small-note">
-        追加した言葉はこの端末のブラウザに保存されます。各言葉の右にある「削除」で消せます。
+        追加した言葉と並び順はこの端末のブラウザに保存されます。「上」「下」で順番を変更でき、「削除」で消せます。
       </div>
     </section>
   </div>
@@ -750,6 +788,28 @@
           phraseButton.setAttribute("data-value", phrase);
           phraseButton.textContent = phrase;
 
+          var upButton = document.createElement("button");
+          upButton.type = "button";
+          upButton.className = "move-phrase action-button";
+          upButton.setAttribute("data-action", "movePhraseUp");
+          upButton.setAttribute("data-index", String(index));
+          upButton.textContent = "上";
+          if (index === 0) {
+            upButton.disabled = true;
+            upButton.style.opacity = "0.45";
+          }
+
+          var downButton = document.createElement("button");
+          downButton.type = "button";
+          downButton.className = "move-phrase action-button";
+          downButton.setAttribute("data-action", "movePhraseDown");
+          downButton.setAttribute("data-index", String(index));
+          downButton.textContent = "下";
+          if (index === state.phrases.length - 1) {
+            downButton.disabled = true;
+            downButton.style.opacity = "0.45";
+          }
+
           var deleteButton = document.createElement("button");
           deleteButton.type = "button";
           deleteButton.className = "delete-phrase action-button";
@@ -758,6 +818,8 @@
           deleteButton.textContent = "削除";
 
           row.appendChild(phraseButton);
+          row.appendChild(upButton);
+          row.appendChild(downButton);
           row.appendChild(deleteButton);
           list.appendChild(row);
         });
@@ -823,6 +885,29 @@
         savePhrases();
         renderPhrases();
         toast("削除しました");
+      }
+
+      function movePhrase(index, direction) {
+        var next = index + direction;
+        if (index < 0 || index >= state.phrases.length) return;
+        if (next < 0 || next >= state.phrases.length) return;
+
+        var temp = state.phrases[index];
+        state.phrases[index] = state.phrases[next];
+        state.phrases[next] = temp;
+
+        savePhrases();
+        renderPhrases();
+      }
+
+      function resetPhrases() {
+        var ok = window.confirm("よく使う言葉をデフォルト設定に戻しますか？\n追加・並び替え・削除した内容はリセットされます。");
+        if (!ok) return;
+
+        state.phrases = defaultPhrases.slice();
+        savePhrases();
+        renderPhrases();
+        toast("デフォルトに戻しました");
       }
 
       function copyText() {
@@ -955,6 +1040,15 @@
           var index = Number(button.getAttribute("data-index"));
           deletePhrase(index);
         }
+        else if (action === "movePhraseUp") {
+          var upIndex = Number(button.getAttribute("data-index"));
+          movePhrase(upIndex, -1);
+        }
+        else if (action === "movePhraseDown") {
+          var downIndex = Number(button.getAttribute("data-index"));
+          movePhrase(downIndex, 1);
+        }
+        else if (action === "resetPhrases") resetPhrases();
       }
 
       function findButton(target) {
@@ -1141,7 +1235,7 @@
       }
 
       function init() {
-        setStatus("動作状態：準備完了です。下までスクロールしても文章欄は上部に残ります。", true);
+        setStatus("動作状態：準備完了です。よく使う言葉は追加・削除・上下移動・デフォルト復元できます。", true);
         loadText();
         loadPhrases();
         loadDisplay();
